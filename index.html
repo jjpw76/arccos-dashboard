@@ -874,13 +874,17 @@ function mergeRounds(csvRounds, apiRounds) {
 // ============================================================
 function applyRollingHandicap(rounds) {
   // rounds sorted ascending by date
-  // Golf Canada: use most recent 20 rounds only for each calculation point
+  // Golf Canada: use most recent 20 SCOREABLE rounds (non-null diff) for each calculation point
   for (let i = 0; i < rounds.length; i++) {
     if (rounds[i].handicapIndex !== null && rounds[i].source === 'csv') continue;
 
-    // Take up to 20 most recent rounds up to and including this one
-    const windowRounds = rounds.slice(Math.max(0, i - 19), i + 1);
-    const diffs = windowRounds.map(r => r.diff).filter(d => d !== null);
+    // Collect all rounds up to and including this one that have a valid differential
+    // Then take the most recent 20 of those
+    const scoreableUpToNow = rounds
+      .slice(0, i + 1)
+      .filter(r => r.diff !== null && !isNaN(r.diff));
+    const window20 = scoreableUpToNow.slice(-20);
+    const diffs = window20.map(r => r.diff);
     const idx = calcHandicapIndex(diffs);
     if (idx !== null) rounds[i].handicapIndex = idx;
   }

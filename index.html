@@ -624,10 +624,20 @@ function calcDifferential(ags, courseRating, slopeRating) {
 }
 
 function calcHandicapIndex(differentials) {
+  // Golf Canada Rules of Handicapping — official count table
   const valid = differentials.filter(d => d !== null && !isNaN(d));
   const n = valid.length;
   if (n < 3) return null;
-  let count = n >= 20 ? 8 : n >= 17 ? 7 : n >= 15 ? 6 : n >= 13 ? 5 : n >= 11 ? 4 : n >= 9 ? 3 : n >= 7 ? 2 : 1;
+  let count;
+  if      (n >= 19) count = 8;
+  else if (n >= 17) count = 7;
+  else if (n >= 15) count = 6;
+  else if (n >= 13) count = 5;
+  else if (n >= 11) count = 4; // Golf Canada: 10-14 rounds use 4-5
+  else if (n >= 9)  count = 4;
+  else if (n >= 7)  count = 3;
+  else if (n >= 5)  count = 2;
+  else              count = 1;
   const sorted = [...valid].sort((a, b) => a - b);
   const best = sorted.slice(0, count);
   const avg = best.reduce((s, v) => s + v, 0) / best.length;
@@ -856,12 +866,15 @@ function mergeRounds(csvRounds, apiRounds) {
 // ROLLING HANDICAP
 // ============================================================
 function applyRollingHandicap(rounds) {
-  // rounds already sorted ascending by date
+  // rounds sorted ascending by date
+  // Golf Canada: use most recent 20 rounds only for each calculation point
   for (let i = 0; i < rounds.length; i++) {
-    if (rounds[i].handicapIndex !== null && rounds[i].source === 'csv') continue; // trust CSV value
+    if (rounds[i].handicapIndex !== null && rounds[i].source === 'csv') continue;
 
-    const window = rounds.slice(0, i + 1).map(r => r.diff).filter(d => d !== null);
-    const idx = calcHandicapIndex(window);
+    // Take up to 20 most recent rounds up to and including this one
+    const windowRounds = rounds.slice(Math.max(0, i - 19), i + 1);
+    const diffs = windowRounds.map(r => r.diff).filter(d => d !== null);
+    const idx = calcHandicapIndex(diffs);
     if (idx !== null) rounds[i].handicapIndex = idx;
   }
 }

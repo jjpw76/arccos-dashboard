@@ -668,13 +668,6 @@ async function loadAll() {
     applyRollingHandicap(merged);
 
     allRounds = merged;
-    // TEMP DEBUG — remove after diagnosis
-    console.log('Total rounds:', allRounds.length);
-    console.log('CSV rounds:', allRounds.filter(r=>r.source==='csv').length);
-    console.log('API rounds:', allRounds.filter(r=>r.source==='api').length);
-    const last5 = allRounds.slice(-5);
-    last5.forEach(r=>console.log(r.date, r.source, r.course, 'diff:', r.diff, 'hcpIdx:', r.handicapIndex));
-    console.log('Most recent 20 diffs:', JSON.stringify(allRounds.slice(-20).map(r=>({date:r.date,diff:r.diff}))));
     clubData = normalizeClubs(clubs);
 
     return true;

@@ -695,31 +695,27 @@ function loadCSV(path) {
 // ============================================================
 function normalizeApiRounds(apiRounds) {
   return apiRounds.map(r => {
-    const d = r.detail || {};
-    const sg = r.strokesGained || {};
-    const course = r.course || {};
+    // All fields are pre-flattened by fetch-rounds.js
+    const holes = r.holes || [];
+    const rating = r.courseRating || null;
+    const slope  = r.slopeRating  || null;
+    const par    = (r.course && r.course.mensPar) || 72;
 
-    const rating = course.courseRating || null;
-    const slope  = course.slopeRating  || null;
-    const par    = course.par          || 72;
-
-    // Holes summary
-    const holes = d.holes || [];
-    const putts = holes.reduce((s, h) => s + (h.putts || 0), 0) || null;
-    const firHoles = holes.filter(h => h.isFairWay === 'T' || h.isFairWay === true).length;
+    const putts      = holes.reduce((s, h) => s + (h.putts || 0), 0) || null;
+    const firHoles   = holes.filter(h => h.isFairWay === 'T').length;
     const firChances = holes.filter(h => h.isFairWay !== null && h.isFairWay !== undefined).length;
-    const girHoles = holes.filter(h => h.isGir === 'T' || h.isGir === true).length;
+    const girHoles   = holes.filter(h => h.isGir === 'T').length;
 
-    const gross = d.noOfShots || null;
-    const ags = gross; // API doesn't include ESC-adjusted; use gross as proxy
-    const diff = calcDifferential(ags, rating, slope);
+    const gross = r.grossScore || null;
+    const ags   = r.ags || gross;
+    const diff  = calcDifferential(ags, rating, slope);
 
     return {
       source: 'api',
-      roundId: String(d.roundId || r.roundId),
-      date: d.startTime ? d.startTime.slice(0, 10) : null,
-      season: d.startTime ? parseInt(d.startTime.slice(0, 4)) : null,
-      course: d.courseName || course.name || 'Unknown',
+      roundId: String(r.roundId),
+      date: r.date || null,
+      season: r.date ? parseInt(r.date.slice(0, 4)) : null,
+      course: r.courseName || 'Unknown',
       par,
       gross,
       net: null,
@@ -727,10 +723,11 @@ function normalizeApiRounds(apiRounds) {
       diff: diff !== null ? parseFloat(diff.toFixed(2)) : null,
       courseRating: rating,
       slopeRating: slope,
-      sgDriving: sg.driving !== undefined ? parseFloat(sg.driving) : null,
-      sgApproach: sg.approach !== undefined ? parseFloat(sg.approach) : null,
-      sgShort: sg.shortGame !== undefined ? parseFloat(sg.shortGame) : null,
-      sgPutting: sg.putting !== undefined ? parseFloat(sg.putting) : null,
+      is9Hole: r.is9Hole || false,
+      sgDriving:  r.sgDriving   !== null && r.sgDriving   !== undefined ? parseFloat(r.sgDriving)   : null,
+      sgApproach: r.sgApproach  !== null && r.sgApproach  !== undefined ? parseFloat(r.sgApproach)  : null,
+      sgShort:    r.sgShortGame !== null && r.sgShortGame !== undefined ? parseFloat(r.sgShortGame) : null,
+      sgPutting:  r.sgPutting   !== null && r.sgPutting   !== undefined ? parseFloat(r.sgPutting)   : null,
       firPct: firChances > 0 ? Math.round(firHoles / firChances * 100) : null,
       girPct: holes.length > 0 ? Math.round(girHoles / holes.length * 100) : null,
       putts,
@@ -738,7 +735,7 @@ function normalizeApiRounds(apiRounds) {
       pars: null,
       bogeys: null,
       doubles: null,
-      handicapIndex: null, // filled by rolling calc
+      handicapIndex: null,
     };
   });
 }

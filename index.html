@@ -624,23 +624,12 @@ function calcDifferential(ags, courseRating, slopeRating) {
 }
 
 function calcHandicapIndex(differentials) {
-  // Golf Canada Rules of Handicapping — official count table
+  // Golf Canada: best 8 of most recent 20 score differentials
   const valid = differentials.filter(d => d !== null && !isNaN(d));
-  const n = valid.length;
-  if (n < 3) return null;
-  let count;
-  if      (n >= 19) count = 8;
-  else if (n >= 17) count = 7;
-  else if (n >= 15) count = 6;
-  else if (n >= 13) count = 5;
-  else if (n >= 11) count = 4; // Golf Canada: 10-14 rounds use 4-5
-  else if (n >= 9)  count = 4;
-  else if (n >= 7)  count = 3;
-  else if (n >= 5)  count = 2;
-  else              count = 1;
+  if (valid.length < 8) return null;
   const sorted = [...valid].sort((a, b) => a - b);
-  const best = sorted.slice(0, count);
-  const avg = best.reduce((s, v) => s + v, 0) / best.length;
+  const best8 = sorted.slice(0, 8);
+  const avg = best8.reduce((s, v) => s + v, 0) / 8;
   return Math.trunc(avg * 0.96 * 10) / 10;
 }
 

@@ -643,52 +643,24 @@ async function loadAll() {
       fetch(CONFIG.allRoundsJson),
       fetch(CONFIG.clubsJson),
     ]);
-
     const apiRounds = apiResp.ok ? await apiResp.json() : [];
     const clubs = clubsResp.ok ? await clubsResp.json() : null;
 
-    // 2. Load CSVs
-    const [csvH, csvRS, csvIT] = await Promise.all([
-      loadCSV(CONFIG.csvHandicap),
-      loadCSV(CONFIG.csvRoundSummary),
-      loadCSV(CONFIG.csvImprovement),
-    ]);
-
-    // 3. Normalize API rounds
+    // 2. Normalize API rounds (API-only — CSVs retired)
     const apiNorm = normalizeApiRounds(apiRounds);
 
-    // 4. Normalize CSV rounds
-    const csvNorm = normalizeCsvRounds(csvH, csvRS, csvIT);
+    // 3. Sort by date ascending, then calculate rolling handicap
+    apiNorm.sort((a, b) => new Date(a.date) - new Date(b.date));
+    applyRollingHandicap(apiNorm);
 
-    // 5. Merge — CSV rounds first, API rounds override if date+course match
-    const merged = mergeRounds(csvNorm, apiNorm);
-
-    // 6. Sort by date ascending, then recalculate rolling handicap
-    merged.sort((a, b) => new Date(a.date) - new Date(b.date));
-    applyRollingHandicap(merged);
-
-    allRounds = merged;
+    allRounds = apiNorm;
     clubData = normalizeClubs(clubs);
-
     return true;
   } catch (err) {
     showError('Data load error: ' + err.message);
     return false;
   }
 }
-
-function loadCSV(path) {
-  return new Promise((resolve) => {
-    Papa.parse(path, {
-      download: true,
-      header: true,
-      skipEmptyLines: true,
-      complete: (results) => resolve(results.data),
-      error: () => resolve([]),
-    });
-  });
-}
-
 // ============================================================
 // NORMALIZE API ROUNDS
 // ============================================================

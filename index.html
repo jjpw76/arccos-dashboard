@@ -679,7 +679,7 @@ function normalizeApiRounds(apiRounds) {
 
     const gross = r.grossScore || null;
     const ags   = r.ags || gross;
-    const diff  = calcDifferential(ags, rating, slope);
+    const diff  = r.is9Hole ? null : calcDifferential(ags, rating, slope);
 
     return {
       source: 'api',

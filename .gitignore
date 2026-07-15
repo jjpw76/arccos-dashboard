@@ -1,10 +1,23 @@
 .DS_Store
+.env
+*.env
 test_arccos.py
 Github Personal access tokens .pages
 Handicap.csv
 Improvement Tracker.csv
 Master HoleLog.csv
 Round Summary.csv
+data/Handicap.csv
 data/Improvement Tracker.csv
+data/Improvement_Tracker.csv
 data/Master HoleLog.csv
 data/Round Summary.csv
+data/Round_Summary.csv
+
+# Raw/private Arccos exports must stay in arccos-export\data.
+data/all_rounds.json
+data/all_rounds_lite.json
+data/clubs.json
+data/courses.json
+data/rounds.json
+data/round_*.json
